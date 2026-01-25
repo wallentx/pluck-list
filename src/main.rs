@@ -1,7 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
+    },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -17,8 +19,7 @@ use ratatui::{
     },
 };
 use std::{
-    env,
-    fs,
+    env, fs,
     io::{self, BufRead},
     path::PathBuf,
 };
@@ -67,8 +68,8 @@ struct ListBuffer {
 
 impl ListBuffer {
     fn new(items: Vec<String>) -> Self {
-        Self { 
-            items, 
+        Self {
+            items,
             state: ListState::default(),
             scroll_offset: 0,
             viewport_height: 0,
@@ -260,21 +261,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> anyhow::Res
             .draw(|f| ui(f, app))
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Press {
-                if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
-                    return Ok(());
-                }
-                match key.code {
-                    KeyCode::Char('q') => {
-                        match app.state {
-                            AppState::MatchInput | AppState::SaveAs(_) => handle_key_event(app, key)?,
-                            _ => return Ok(()),
-                        }
-                    }
-                    KeyCode::Tab => app.cycle_active_buffer(),
-                    _ => handle_key_event(app, key)?,
-                }
+        if let Event::Key(key) = event::read()?
+            && key.kind == event::KeyEventKind::Press
+        {
+            if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
+                return Ok(());
+            }
+            match key.code {
+                KeyCode::Char('q') => match app.state {
+                    AppState::MatchInput | AppState::SaveAs(_) => handle_key_event(app, key)?,
+                    _ => return Ok(()),
+                },
+                KeyCode::Tab => app.cycle_active_buffer(),
+                _ => handle_key_event(app, key)?,
             }
         }
     }
@@ -375,7 +374,7 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
         AppState::CountInput(mode) => {
             if app.active_buffer == ActiveBuffer::Prompt {
                 match key.code {
-                    KeyCode::Char(c) if c.is_digit(10) => {
+                    KeyCode::Char(c) if c.is_ascii_digit() => {
                         app.insert_char(c);
                     }
                     KeyCode::Backspace => {
@@ -493,10 +492,8 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
         AppState::ConfirmOverwrite(path, target) => {
             if key.code == KeyCode::Char('y') || key.code == KeyCode::Char('Y') {
                 if let Err(e) = save_list(app, path.clone(), target) {
-                    app.state = AppState::Error(
-                        e.to_string(),
-                        Box::new(AppState::PostPluckModeSelect),
-                    );
+                    app.state =
+                        AppState::Error(e.to_string(), Box::new(AppState::PostPluckModeSelect));
                 } else {
                     app.state = AppState::Message(
                         format!("Successfully saved to {}", path.display()),
@@ -504,7 +501,10 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
                     );
                     app.prompt_input.clear();
                 }
-            } else if key.code == KeyCode::Char('n') || key.code == KeyCode::Char('N') || key.code == KeyCode::Esc {
+            } else if key.code == KeyCode::Char('n')
+                || key.code == KeyCode::Char('N')
+                || key.code == KeyCode::Esc
+            {
                 app.state = AppState::SaveAs(target);
             } else {
                 app.state = AppState::ConfirmOverwrite(path, target);
@@ -660,7 +660,9 @@ fn ui(f: &mut Frame, app: &mut App) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(if app.active_buffer == ActiveBuffer::Prompt {
-            Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Blue)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::DarkGray)
         });
@@ -681,25 +683,27 @@ fn ui(f: &mut Frame, app: &mut App) {
                     text.push(Line::from(Span::styled(
                         format!("[{}]", opt),
                         Style::default()
-                            .fg(if app.active_buffer == ActiveBuffer::Prompt { Color::Yellow } else { Color::Gray })
+                            .fg(if app.active_buffer == ActiveBuffer::Prompt {
+                                Color::Yellow
+                            } else {
+                                Color::Gray
+                            })
                             .add_modifier(Modifier::BOLD),
                     )));
                 } else {
                     text.push(Line::from(format!(" {}", opt)));
                 }
             }
-            let paragraph = Paragraph::new(text).block(prompt_block).style(inactive_text_style);
+            let paragraph = Paragraph::new(text)
+                .block(prompt_block)
+                .style(inactive_text_style);
             f.render_widget(paragraph, prompt_area);
         }
         AppState::CountInput(_) => {
             let prefix = "Enter number of lines to pluck: ";
-            let paragraph = Paragraph::new(Line::from(format!(
-                "{}{}",
-                prefix,
-                app.prompt_input
-            )))
-            .block(prompt_block)
-            .style(inactive_text_style);
+            let paragraph = Paragraph::new(Line::from(format!("{}{}", prefix, app.prompt_input)))
+                .block(prompt_block)
+                .style(inactive_text_style);
             f.render_widget(paragraph, prompt_area);
             if app.active_buffer == ActiveBuffer::Prompt {
                 f.set_cursor_position((
@@ -710,13 +714,9 @@ fn ui(f: &mut Frame, app: &mut App) {
         }
         AppState::MatchInput => {
             let prefix = "Match (regex supported): ";
-            let paragraph = Paragraph::new(Line::from(format!(
-                "{}{}",
-                prefix,
-                app.prompt_input
-            )))
-            .block(prompt_block)
-            .style(inactive_text_style);
+            let paragraph = Paragraph::new(Line::from(format!("{}{}", prefix, app.prompt_input)))
+                .block(prompt_block)
+                .style(inactive_text_style);
             f.render_widget(paragraph, prompt_area);
             if app.active_buffer == ActiveBuffer::Prompt {
                 f.set_cursor_position((
@@ -755,12 +755,12 @@ fn ui(f: &mut Frame, app: &mut App) {
             }
         }
         AppState::ConfirmOverwrite(path, _) => {
-            let paragraph = Paragraph::new(Line::from(vec![
-                Span::styled(
-                    format!("File '{}' exists. Overwrite? (y/n)", path.display()),
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-                ),
-            ]))
+            let paragraph = Paragraph::new(Line::from(vec![Span::styled(
+                format!("File '{}' exists. Overwrite? (y/n)", path.display()),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            )]))
             .block(prompt_block)
             .style(inactive_text_style);
             f.render_widget(paragraph, prompt_area);
@@ -803,7 +803,9 @@ fn render_list(
         .title(title)
         .border_type(BorderType::Rounded)
         .border_style(if active {
-            Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Blue)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::DarkGray)
         });
@@ -838,9 +840,10 @@ fn render_list(
     let total_items = buffer.items.len();
     let offset = buffer.state.offset();
 
-    let mut scrollbar_state = ScrollbarState::new(total_items.saturating_sub(buffer.viewport_height))
-        .position(offset)
-        .viewport_content_length(buffer.viewport_height);
+    let mut scrollbar_state =
+        ScrollbarState::new(total_items.saturating_sub(buffer.viewport_height))
+            .position(offset)
+            .viewport_content_length(buffer.viewport_height);
 
     let scrollbar = Scrollbar::default()
         .orientation(ScrollbarOrientation::VerticalRight)
