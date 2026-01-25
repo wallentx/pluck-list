@@ -130,10 +130,19 @@ struct App {
     mode_index: usize,
     preview_indices: Vec<usize>,
     post_pluck: bool,
+    modified_list_name: String,
+    new_list_name: String,
 }
 
 impl App {
     fn new(items: Vec<String>, input_path: Option<PathBuf>) -> Self {
+        let modified_list_name = input_path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "List".to_string());
+
         Self {
             state: AppState::Init,
             active_buffer: ActiveBuffer::Prompt,
@@ -145,6 +154,8 @@ impl App {
             mode_index: 0,
             preview_indices: Vec::new(),
             post_pluck: false,
+            modified_list_name,
+            new_list_name: "New_List".to_string(),
         }
     }
 
@@ -469,6 +480,11 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
                                     Box::new(AppState::PostPluckModeSelect),
                                 );
                             } else {
+                                if target == ActiveBuffer::New
+                                    && let Some(name) = path.file_name().and_then(|n| n.to_str())
+                                {
+                                    app.new_list_name = name.to_string();
+                                }
                                 app.state = AppState::Message(
                                     format!("Successfully saved to {}", path.display()),
                                     Box::new(AppState::PostPluckModeSelect),
@@ -495,6 +511,11 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
                     app.state =
                         AppState::Error(e.to_string(), Box::new(AppState::PostPluckModeSelect));
                 } else {
+                    if target == ActiveBuffer::New
+                        && let Some(name) = path.file_name().and_then(|n| n.to_str())
+                    {
+                        app.new_list_name = name.to_string();
+                    }
                     app.state = AppState::Message(
                         format!("Successfully saved to {}", path.display()),
                         Box::new(AppState::PostPluckModeSelect),
@@ -573,6 +594,7 @@ fn apply_match_pluck(app: &mut App) {
     app.preview_indices.clear();
     app.state = AppState::ApplyPluck;
     app.post_pluck = true;
+    app.new_list_name = "New_List".to_string();
     app.active_buffer = ActiveBuffer::New;
 }
 
@@ -604,6 +626,7 @@ fn apply_pluck(app: &mut App, mode: PluckMode, n: usize) {
     app.new_list = ListBuffer::new(plucked);
     app.state = AppState::ApplyPluck;
     app.post_pluck = true;
+    app.new_list_name = "New_List".to_string();
     app.active_buffer = ActiveBuffer::New;
 }
 
@@ -627,7 +650,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             f,
             top_area,
             &mut app.modified_list,
-            "List",
+            &app.modified_list_name,
             app.active_buffer == ActiveBuffer::SingleList,
             &app.preview_indices,
         );
@@ -637,11 +660,12 @@ fn ui(f: &mut Frame, app: &mut App) {
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(top_area);
 
+        let modified_title = format!("{}*", app.modified_list_name);
         render_list(
             f,
             split_layout[0],
             &mut app.modified_list,
-            "Modified List",
+            &modified_title,
             app.active_buffer == ActiveBuffer::Modified,
             &app.preview_indices,
         );
@@ -649,7 +673,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             f,
             split_layout[1],
             &mut app.new_list,
-            "New List",
+            &app.new_list_name,
             app.active_buffer == ActiveBuffer::New,
             &[],
         );
@@ -727,7 +751,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         }
         AppState::ApplyPluck => {
             let paragraph = Paragraph::new(Line::from(format!(
-                "Plucked {} lines. Focus input buffer to continue.",
+                "Plucked {} lines. Press 'S' to save the New_List as a new file. Focus input buffer to continue.",
                 app.new_list.items.len()
             )))
             .block(prompt_block)

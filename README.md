@@ -15,7 +15,7 @@ Whether you're grabbing the top 100 lines for a test set, or using a regex to su
   - **Top-down**: Pluck the first $N$ lines.
   - **Bottom-up**: Pluck the last $N$ lines.
   - **String match**: Filter lines using a string or regex with a live preview.
-- **Split View**: Once lines are plucked, the UI splits into a "Modified List" (what remains) and a "New List" (what was plucked).
+- **Split View**: Once lines are plucked, the UI splits into a "Modified List" (what remains) and a "New_List" (what was plucked).
 - **Incremental Operations**: Subsequent plucks always operate on the "Modified List", allowing you to peel away layers of data.
 - **Save/Save As**: Save your working set or your results to files with overwrite protection.
 
@@ -43,7 +43,7 @@ ls -R | ./target/release/pluck-list
 
 ### Keybindings
 
-- **`TAB` (⇥)**: Cycle active buffer (Prompt ↔ Modified List ↔ New List).
+- **`TAB` (⇥)**: Cycle active buffer (Prompt ↔ Modified List ↔ New_List).
 - **`Arrows` / `PageUp` / `PageDown`**: Navigate the active list buffer.
 - **`Enter` (↵)**: Select a menu option or confirm input.
 - **`Esc`**: Cancel current input or return to the main menu.
