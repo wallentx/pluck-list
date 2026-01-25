@@ -8,6 +8,8 @@ Imagine you have a massive log file, a list of cloud resources, or a queue of me
 
 Whether you're grabbing the top 100 lines for a test set, or using a regex to surgically remove specific patterns, you get live visual feedback on exactly what you're changing. It is designed to help you **whittle down** noise to find the signal.
 
+<video src="demo.webm" controls="controls" muted="muted" style="max-width: 100%;"></video>
+
 ## Features
 
 - **Keyboard-only workflow**: Designed for speed and efficiency without mouse interaction.
