@@ -1,25 +1,25 @@
 # pluck-list
 
-**The visual, interactive `mv` command for text lists.**
+**The interactive tool for stateful list partitioning.**
 
-`pluck-list` turns the tedious task of splitting and filtering text files into a fast, keyboard-driven workflow.
+Standard CLI pipelines are stateless. This makes iterative partitioning (splitting a dataset into multiple specific subsets) unnecessarily complex. If you need to extract sequential batches from a list, tools like `head` and `tail` force you to manually calculate and manage offsets for every step. This process is brittle and tedious.
 
-Imagine you have a massive log file, a list of cloud resources, or a queue of messy data. You don't just want to *view* it; you want to **extract** parts of it. Instead of juggling `grep`, `head`, and temporary files, `pluck-list` lets you interactively "pluck" lines out of your main list and move them into a new one.
+`pluck-list` solves this by treating your list as a mutable resource. When you "pluck" a selection, it is removed from the source. This automatically exposes the remainder for the next operation, turning a complex chain of math and temporary files into a linear workflow.
 
-Whether you're grabbing the top 100 lines for a test set, or using a regex to surgically remove specific patterns, you get live visual feedback on exactly what you're changing. It is designed to help you **whittle down** noise to find the signal.
+Use it to interactively filter and split text files, selecting lines via counts or regex and moving them into new buffers.
 
 ![pluck-list](https://github.com/user-attachments/assets/fdf04d81-c28a-4f11-8033-0f2d31f44db7)
 
 ## Features
 
-- **Keyboard-only workflow**: Designed for speed and efficiency without mouse interaction.
-- **Multiple Pluck Modes**:
-  - **Top-down**: Pluck the first $N$ lines.
-  - **Bottom-up**: Pluck the last $N$ lines.
-  - **String match**: Filter lines using a string or regex with a live preview.
-- **Split View**: Once lines are plucked, the UI splits into a "Modified List" (what remains) and a "New_List" (what was plucked).
-- **Incremental Operations**: Subsequent plucks always operate on the "Modified List", allowing you to peel away layers of data.
-- **Save/Save As**: Save your working set or your results to files with overwrite protection.
+- **TUI Interface**: A keyboard-driven workflow for navigating and selecting data.
+- **Selection Modes**:
+  - **Top-down**: Extract the first $N$ lines.
+  - **Bottom-up**: Extract the last $N$ lines.
+  - **String match**: Filter lines by string or regex with a live preview.
+- **Dual Buffers**: Once lines are moved, the interface displays the "Modified List" (remaining lines) and the "New_List" (extracted lines) side-by-side.
+- **Iterative Filtering**: Subsequent operations apply to the "Modified List," allowing for multi-step data extraction.
+- **Exporting**: Save either buffer to a file with overwrite protection.
 
 ## Installation
 
@@ -33,7 +33,7 @@ The binary will be available at `./target/release/pluck-list`.
 
 ## Usage
 
-Provide a file or pipe multiline output to `pluck-list`:
+Provide a file path or pipe multiline output to `pluck-list`:
 
 ```bash
 # Using a file
@@ -45,10 +45,10 @@ ls -R | ./target/release/pluck-list
 
 ### Keybindings
 
-- **`TAB` (⇥)**: Cycle active buffer (Prompt ↔ Modified List ↔ New_List).
-- **`Arrows` / `PageUp` / `PageDown`**: Navigate the active list buffer.
-- **`Enter` (↵)**: Select a menu option or confirm input.
-- **`Esc`**: Cancel current input or return to the main menu.
+- **`TAB`**: Cycle the active buffer (Prompt ↔ Modified List ↔ New_List).
+- **`Arrows` / `PageUp` / `PageDown`**: Navigate the active buffer.
+- **`Enter`**: Confirm selection or input.
+- **`Esc`**: Cancel input or return to the main menu.
 - **`s`**: Save the Modified List in-place (if the input was a file).
-- **`S`**: Save the currently active list buffer (Modified or New) to a new path.
+- **`S`**: Save the active buffer to a new path.
 - **`q`**: Quit the application.
