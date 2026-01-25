@@ -8,6 +8,8 @@ Imagine you have a massive log file, a list of cloud resources, or a queue of me
 
 Whether you're grabbing the top 100 lines for a test set, or using a regex to surgically remove specific patterns, you get live visual feedback on exactly what you're changing. It is designed to help you **whittle down** noise to find the signal.
 
+![pluck-list](https://github.com/user-attachments/assets/fdf04d81-c28a-4f11-8033-0f2d31f44db7)
+
 ## Features
 
 - **Keyboard-only workflow**: Designed for speed and efficiency without mouse interaction.
