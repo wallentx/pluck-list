@@ -473,25 +473,23 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
                         let path = PathBuf::from(&app.prompt_input);
                         if path.exists() {
                             app.state = AppState::ConfirmOverwrite(path, target);
+                        } else if let Err(e) = save_list(app, path.clone(), target) {
+                            app.state = AppState::Error(
+                                e.to_string(),
+                                Box::new(AppState::PostPluckModeSelect),
+                            );
                         } else {
-                            if let Err(e) = save_list(app, path.clone(), target) {
-                                app.state = AppState::Error(
-                                    e.to_string(),
-                                    Box::new(AppState::PostPluckModeSelect),
-                                );
-                            } else {
-                                if target == ActiveBuffer::New
-                                    && let Some(name) = path.file_name().and_then(|n| n.to_str())
-                                {
-                                    app.new_list_name = name.to_string();
-                                }
-                                app.state = AppState::Message(
-                                    format!("Successfully saved to {}", path.display()),
-                                    Box::new(AppState::PostPluckModeSelect),
-                                );
-                                app.prompt_input.clear();
-                                app.input_cursor_position = 0;
+                            if target == ActiveBuffer::New
+                                && let Some(name) = path.file_name().and_then(|n| n.to_str())
+                            {
+                                app.new_list_name = name.to_string();
                             }
+                            app.state = AppState::Message(
+                                format!("Successfully saved to {}", path.display()),
+                                Box::new(AppState::PostPluckModeSelect),
+                            );
+                            app.prompt_input.clear();
+                            app.input_cursor_position = 0;
                         }
                     }
                     KeyCode::Esc => {
